@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Web Crawler & Data Extraction Engine</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        input, button {
+            padding: 12px;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+
+        input[type="text"] {
+            width: 70%;
+        }
+
+        input[type="number"] {
+            width: 80px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .page {
+            border-bottom: 1px solid #ddd;
+            padding: 15px 0;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Web Crawler & Data Extraction Engine</h1>
+
+    <p class="description">
+        Enter a website URL to crawl webpages, extract useful information,
+        and view crawl statistics.
+    </p>
+
+    <input
+        id="url"
+        type="text"
+        placeholder="https://example.com"
+        value="https://example.com"
+    >
+
+    <input
+        id="depth"
+        type="number"
+        min="0"
+        max="3"
+        value="1"
+    >
+
+    <button onclick="startCrawl()">Start Crawl</button>
+
+    <div id="results" class="results">
+        Results will appear here.
+    </div>
+
+    <script>
+        async function startCrawl() {
+            const url = document.getElementById("url").value;
+            const depth = document.getElementById("depth").value;
+            const results = document.getElementById("results");
+
+            results.innerHTML = "Crawling... Please wait.";
+
+            try {
+                const response = await fetch("/crawl", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        depth: depth
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    results.innerHTML =
+                        `<p class="error">${data.error}</p>`;
+                    return;
+                }
+
+                let html = `
+                    <h2>Crawl Statistics</h2>
+                    <p><strong>Pages Visited:</strong> ${data.pages_visited}</p>
+                    <p><strong>Failed Pages:</strong> ${data.failed_pages}</p>
+                    <h2>Extracted Pages</h2>
+                `;
+
+                data.results.forEach(page => {
+                    html += `
+                        <div class="page">
+                            <h3>${page.title || "No title"}</h3>
+                            <p>
+                                <strong>Headings:</strong>
+                                ${page.headings.length}
+                            </p>
+                            <p>
+                                <strong>Paragraphs:</strong>
+                                ${page.paragraphs.length}
+                            </p>
+                            <p>
+                                <strong>Links:</strong>
+                                ${page.links.length}
+                            </p>
+                            <p>
+                                <strong>Images:</strong>
+                                ${page.images.length}
+                            </p>
+                        </div>
+                    `;
+                });
+
+                results.innerHTML = html;
+
+            } catch (error) {
+                results.innerHTML =
+                    `<p class="error">${error.message}</p>`;
+            }
+        }
+    </script>
+
+</body>
+</html>
