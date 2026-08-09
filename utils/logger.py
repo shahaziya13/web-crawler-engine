@@ -1,35 +1,31 @@
 import logging
 import os
 
-LOG_DIR = "logs"
+# Vercel provides /tmp as a writable directory
+LOG_DIR = "/tmp/logs"
+os.makedirs(LOG_DIR, exist_ok=True)
 
-# Vercel/serverless environments have a read-only filesystem.
-# Use local file logging only when running outside Vercel.
-IS_VERCEL = os.getenv("VERCEL") == "1"
+LOG_FILE = os.path.join(LOG_DIR, "crawler.log")
 
-logger = logging.getLogger("WebCrawler")
-
+logger = logging.getLogger("web_crawler")
 logger.setLevel(logging.INFO)
 
+# Prevent duplicate handlers during serverless imports
 if not logger.handlers:
+    # Console handler - visible in Vercel logs
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
 
+    # File handler - temporary storage only
+    file_handler = logging.FileHandler(LOG_FILE)
+    file_handler.setLevel(logging.INFO)
+
     formatter = logging.Formatter(
-        "%(asctime)s | %(levelname)s | %(message)s"
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     console_handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
+
     logger.addHandler(console_handler)
-
-    if not IS_VERCEL:
-        os.makedirs(LOG_DIR, exist_ok=True)
-
-        file_handler = logging.FileHandler(
-            os.path.join(LOG_DIR, "crawler.log"),
-            encoding="utf-8"
-        )
-
-        file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+    logger.addHandler(file_handler)
