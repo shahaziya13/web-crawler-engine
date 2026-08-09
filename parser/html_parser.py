@@ -8,13 +8,15 @@ class HTMLParser:
     """
 
     def parse(self, html: str, base_url: str) -> dict:
-        soup = BeautifulSoup(html, "lxml")
+        soup = BeautifulSoup(html, "html.parser")
 
         title = soup.title.string.strip() if soup.title and soup.title.string else ""
 
         headings = [
             heading.get_text(strip=True)
-            for heading in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])
+            for heading in soup.find_all(
+                ["h1", "h2", "h3", "h4", "h5", "h6"]
+            )
         ]
 
         paragraphs = [
